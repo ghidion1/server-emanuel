@@ -8,10 +8,9 @@ app.use(express.json());
 
 // --- CORS ---
 app.use(cors({
-  origin: ['https://emanuel-cioburciu.md','https://emanuel-cioburciu.md/programare'],
+  origin: 'https://emanuel-cioburciu.md',
   methods: ['GET','POST','PUT','DELETE'],
 }));
-
 
 // --- Pool PostgreSQL ---
 const pool = new Pool({
