@@ -21,6 +21,7 @@ const pool = new Pool({
 
 // --- POST pentru programari ---
 app.post("/api/programari", async (req, res) => {
+  console.log("BODY primit:", req.body); // DEBUG
   const { nume, prenume, specialitate, medic, data, ora, telefon, email, motiv, mesaj } = req.body;
   try {
     const result = await pool.query(
@@ -31,10 +32,11 @@ app.post("/api/programari", async (req, res) => {
     console.log("Programare primită:", result.rows[0]);
     res.status(200).json({ message: "Programare primită!", programare: result.rows[0] });
   } catch (err) {
-    console.error(err);
+    console.error("EROARE INSERT:", err);
     res.status(500).json({ message: "Eroare la adăugarea programării." });
   }
 });
+
 
 // --- GET pentru afișare programari ---
 app.get("/api/programari", async (req, res) => {
