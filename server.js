@@ -1,9 +1,9 @@
-import express from "express";
-import cors from "cors";
-import pkg from "pg";
-
+// CommonJS
+const express = require("express");
+const cors = require("cors");
+const pkg = require("pg");
 const { Pool } = pkg;
-const app = express();
+
 app.use(express.json());
 
 // --- CORS ---
