@@ -4,6 +4,7 @@ const cors = require("cors");
 const pkg = require("pg");
 const { Pool } = pkg;
 
+const app = express();
 app.use(express.json());
 
 // --- CORS ---
