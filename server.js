@@ -9,3 +9,7 @@ app.post("/api/programari", (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000, () => console.log("Server pornit"));
+// În server.js sau app.js
+app.get("/", (req, res) => {
+  res.send("Serverul funcționează!");
+});
