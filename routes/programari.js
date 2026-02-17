@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { createProgramare, getProgramari } = require("../controllers/programariController");
 
-router.post("/", createProgramare);
-router.get("/", getProgramari);
+// handler valid:
+router.post("/programari", (req, res) => {
+  // logica ta
+  res.json({ message: "OK" });
+});
 
 module.exports = router;
