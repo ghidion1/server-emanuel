@@ -1,23 +1,22 @@
-// server.js
 import express from "express";
 import cors from "cors";
 import pkg from "pg";
 
 const { Pool } = pkg;
-
 const app = express();
 app.use(express.json());
 
 // --- CORS ---
 app.use(cors({
-  origin: 'https://emanuel-cioburciu.md', // URL-ul frontend-ului tău
+  origin: ['https://emanuel-cioburciu.md','https://emanuel-cioburciu.md/programare'],
   methods: ['GET','POST','PUT','DELETE'],
 }));
 
+
 // --- Pool PostgreSQL ---
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // URL-ul bazei externe
-  ssl: { rejectUnauthorized: false }         // necesar pe Render
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
 // --- POST pentru programari ---
