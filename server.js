@@ -19,16 +19,36 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-// --- POST pentru programari ---
 app.post("/api/programari", async (req, res) => {
   console.log("BODY primit:", req.body); // DEBUG
-  const { nume, prenume, specialitate, medic, data, ora, telefon, email, motiv, mesaj } = req.body;
+
+  let { nume, prenume, specialitate, medic, data, ora, telefon, email, motiv, mesaj } = req.body;
+
+  // --- VALIDARE DE BAZĂ ---
+  if (!nume || !prenume || !specialitate || !medic || !data || !ora || !telefon) {
+    return res.status(400).json({ message: "Lipsesc câmpuri obligatorii!" });
+  }
+
+  // --- Normalizare data și ora ---
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // YYYY-MM-DD
+  const timeRegex = /^\d{2}:\d{2}$/;       // HH:MM
+
+  if (!dateRegex.test(data)) {
+    return res.status(400).json({ message: "Data nu este în formatul corect YYYY-MM-DD" });
+  }
+
+  if (!timeRegex.test(ora)) {
+    return res.status(400).json({ message: "Ora nu este în formatul corect HH:MM" });
+  }
+
   try {
     const result = await pool.query(
-      `INSERT INTO programari (nume, prenume, specialitate, medic, data, ora, telefon, email, motiv, mesaj)
+      `INSERT INTO programari 
+       (nume, prenume, specialitate, medic, data, ora, telefon, email, motiv, mesaj)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [nume, prenume, specialitate, medic, data, ora, telefon, email, motiv, mesaj]
+      [nume, prenume, specialitate, medic, data, ora, telefon, email || null, motiv || null, mesaj || null]
     );
+
     console.log("Programare primită:", result.rows[0]);
     res.status(200).json({ message: "Programare primită!", programare: result.rows[0] });
   } catch (err) {
@@ -36,6 +56,7 @@ app.post("/api/programari", async (req, res) => {
     res.status(500).json({ message: "Eroare la adăugarea programării." });
   }
 });
+
 
 
 // --- GET pentru afișare programari ---
