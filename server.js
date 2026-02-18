@@ -5,6 +5,7 @@ const cors = require("cors");
 
 // Import routes
 const programariRoutes = require("./routes/programari");
+const adminRoutes = require("./routes/admin");
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use(cors(corsOptions));
 
 // --- Routes ---
 app.use('/api/programari', programariRoutes);
+app.use('/api/admin', adminRoutes);
 
 // --- Health Check Endpoint ---
 app.get("/", (req, res) => {

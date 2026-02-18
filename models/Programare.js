@@ -15,9 +15,26 @@ const Programare = {
   },
 
   getAll: async () => {
-    const res = await pool.query("SELECT * FROM programari ORDER BY data, ora ASC");
+    const res = await pool.query("SELECT * FROM programari ORDER BY data DESC, ora ASC");
     return res.rows;
   },
+
+  delete: async (id) => {
+    const query = "DELETE FROM programari WHERE id = $1 RETURNING *";
+    const res = await pool.query(query, [id]);
+    return res.rows[0] || null;
+  },
+
+  updateStatus: async (id, status) => {
+    const query = `
+      UPDATE programari 
+      SET status = $1, updated_at = NOW() 
+      WHERE id = $2 
+      RETURNING *
+    `;
+    const res = await pool.query(query, [status, id]);
+    return res.rows[0] || null;
+  }
 };
 
 module.exports = Programare;
