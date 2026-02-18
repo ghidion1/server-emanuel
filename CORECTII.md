@@ -179,7 +179,7 @@ RESPONSE → FRONTEND
 ## 🧪 Testing
 
 ```bash
-# 1. Health check
+# 1. Health checkwdqwdqwd
 npm test
 
 # 2. Start server  
