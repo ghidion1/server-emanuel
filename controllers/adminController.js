@@ -88,11 +88,24 @@ const updateProgramareStatus = async (req, res) => {
       return res.status(404).json({ message: "Programare nu găsită" });
     }
 
-    // Dacă s-a confirmat, trimite email de confirmare către client (non-blocking)
-    if (status === 'confirmed' && result.email) {
-      const subject = 'Confirmare programare - Clinica Mobila';
-      const text = `Bună ${result.nume} ${result.prenume},\n\nProgramarea ta pentru ${result.specialitate} cu ${result.medic} la data ${result.data} ora ${result.ora} a fost confirmată. Te așteptăm!\n\nMulțumim,\nEchipa Clinica Mobila`;
-      sendEmail({ to: result.email, subject, text }).catch(err => console.error('Email confirmare eroare:', err.message));
+    // Trimite email clientului la orice schimbare de status (confirmat, anulat, completat)
+    if (result.email) {
+      let subject = 'Actualizare programare - Clinica Mobila';
+      let text = `Bună ${result.nume} ${result.prenume},\n\n`;
+      if (status === 'confirmed') {
+        subject = 'Confirmare programare - Clinica Mobila';
+        text += `Programarea ta pentru ${result.specialitate} cu ${result.medic} la data ${result.data} ora ${result.ora} a fost CONFIRMATĂ. Te așteptăm!`;
+      } else if (status === 'cancelled') {
+        subject = 'Programare anulată - Clinica Mobila';
+        text += `Programarea ta pentru ${result.specialitate} cu ${result.medic} la data ${result.data} ora ${result.ora} a fost ANULATĂ. Pentru o nouă programare, accesează site-ul nostru.`;
+      } else if (status === 'completed') {
+        subject = 'Programare finalizată - Clinica Mobila';
+        text += `Programarea ta pentru ${result.specialitate} cu ${result.medic} la data ${result.data} ora ${result.ora} a fost FINALIZATĂ. Mulțumim pentru încredere!`;
+      } else {
+        text += `Statusul programării tale a fost actualizat la: ${status}.`;
+      }
+      text += `\n\nEchipa Clinica Mobila`;
+      sendEmail({ to: result.email, subject, text }).catch(err => console.error('Email status programare eroare:', err.message));
     }
 
     res.json({
