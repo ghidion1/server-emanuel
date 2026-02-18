@@ -6,6 +6,7 @@ const cors = require("cors");
 // Import routes
 const programariRoutes = require("./routes/programari");
 const adminRoutes = require("./routes/admin");
+const { startReminderJob } = require('./utils/reminderJob');
 
 const app = express();
 
@@ -107,6 +108,12 @@ const server = app.listen(PORT, () => {
 ║ 🎯 Frontend: ${process.env.FRONTEND_URL || 'http://localhost:3000'}
 ║════════════════════════════════════════╝
   `);
+  // Pornește job-ul de remindere (dacă este configurat)
+  try {
+    startReminderJob();
+  } catch (err) {
+    console.error('❌ Eroare la pornirea reminder job:', err.message);
+  }
 });
 
 // Graceful shutdown (important pentru Render)

@@ -24,23 +24,20 @@ const createProgramare = async (req, res) => {
       sendEmail({
         to: process.env.ADMIN_EMAIL,
         subject: `📅 Noua programare - ${specialitate}`,
-        text: `
-NOUA PROGRAMARE:
-
-Pacient: ${nume} ${prenume}
-Specialitate: ${specialitate}
-Medic: ${medic}
-Data: ${data}
-Ora: ${ora}
-Telefon: ${telefon}
-Email: ${email || '-'}
-Motiv: ${motiv || '-'}
-Mesaj: ${mesaj || '-'}
-
----
-Verifica dashboard pentru mai multe detalii.
-        `
+        text: `NOUA PROGRAMARE:\n\nPacient: ${nume} ${prenume}\nSpecialitate: ${specialitate}\nMedic: ${medic}\nData: ${data}\nOra: ${ora}\nTelefon: ${telefon}\nEmail: ${email || '-'}\nMotiv: ${motiv || '-'}\nMesaj: ${mesaj || '-'}\n\nVerifica dashboard pentru mai multe detalii.`
       }).catch(err => console.error("Email admin eroare:", err.message));
+    }
+
+    // Trimite email de confirmare/thank-you către client (dacă a furnizat email)
+    if (email) {
+      const clientSubject = `Clinica Mobila - Programarea ta a fost primită`;
+      const clientText = `Bună ${nume} ${prenume},\n\nMulțumim că ai ales Clinica noastră. Programarea ta pentru ${specialitate} cu ${medic} a fost înregistrată pentru data ${data} la ora ${ora}. Vei fi contactat(ă) telefonic pentru confirmare.\n\nMulțumim,\nEchipa Clinica Mobila`;
+
+      sendEmail({
+        to: email,
+        subject: clientSubject,
+        text: clientText
+      }).catch(err => console.error("Email client eroare:", err.message));
     }
 
     return res.status(201).json({

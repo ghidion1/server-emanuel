@@ -1,4 +1,5 @@
 const Programare = require("../models/Programare");
+const sendEmail = require("../utils/sendEmail");
 
 // Hardcoded admin credentials (pe producție folosește database)
 // ⚠️ CHANGE THESE IMMEDIATELY IN PRODUCTION
@@ -85,6 +86,13 @@ const updateProgramareStatus = async (req, res) => {
 
     if (!result) {
       return res.status(404).json({ message: "Programare nu găsită" });
+    }
+
+    // Dacă s-a confirmat, trimite email de confirmare către client (non-blocking)
+    if (status === 'confirmed' && result.email) {
+      const subject = 'Confirmare programare - Clinica Mobila';
+      const text = `Bună ${result.nume} ${result.prenume},\n\nProgramarea ta pentru ${result.specialitate} cu ${result.medic} la data ${result.data} ora ${result.ora} a fost confirmată. Te așteptăm!\n\nMulțumim,\nEchipa Clinica Mobila`;
+      sendEmail({ to: result.email, subject, text }).catch(err => console.error('Email confirmare eroare:', err.message));
     }
 
     res.json({
