@@ -17,25 +17,41 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://clinic-mobila.onrender.com',
-  process.env.FRONTEND_URL || 'https://clinic-mobila.onrender.com'
-];
+  process.env.FRONTEND_URL
+].filter(Boolean); // Remove undefined values
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      // Log CORS rejection in development
-      if (process.env.NODE_ENV === 'development') {
-        console.warn(`⚠️  CORS blocked: ${origin}`);
-      }
-      callback(new Error('Not allowed by CORS'));
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests without origin (like curl, mobile apps)
+    if (!origin) {
+      return callback(null, true);
     }
+    
+    // Allow exact matches
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow all *.onrender.com domains in production
+    if (process.env.NODE_ENV === 'production' && origin.includes('.onrender.com')) {
+      return callback(null, true);
+    }
+
+    // Log CORS rejection in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`⚠️  CORS request from: ${origin}`);
+      // Allow all in development
+      return callback(null, true);
+    }
+    
+    callback(new Error('CORS nicht allowed'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
   optionsSuccessStatus: 200
-}));
+};
+
+app.use(cors(corsOptions));
 
 // --- Routes ---
 app.use('/api/programari', programariRoutes);
