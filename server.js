@@ -1,79 +1,98 @@
 // CommonJS
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
-const pkg = require("pg");
-const { Pool } = pkg;
+
+// Import routes
+const programariRoutes = require("./routes/programari");
 
 const app = express();
-app.use(express.json());
 
-// --- CORS ---
+// --- Middleware ---
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// --- CORS Configuration ---
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://clinic-mobila.onrender.com',
+  process.env.FRONTEND_URL || 'https://clinic-mobila.onrender.com'
+];
+
 app.use(cors({
-  origin: 'https://emanuel-cioburciu.md',
-  methods: ['GET','POST','PUT','DELETE'],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      // Log CORS rejection in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`⚠️  CORS blocked: ${origin}`);
+      }
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 
-// --- Pool PostgreSQL ---
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+// --- Routes ---
+app.use('/api/programari', programariRoutes);
 
-app.post("/api/programari", async (req, res) => {
-  console.log("BODY primit:", req.body); // DEBUG
-
-  let { nume, prenume, specialitate, medic, data, ora, telefon, email, motiv, mesaj } = req.body;
-
-  // --- VALIDARE DE BAZĂ ---
-  if (!nume || !prenume || !specialitate || !medic || !data || !ora || !telefon) {
-    return res.status(400).json({ message: "Lipsesc câmpuri obligatorii!" });
-  }
-
-  // --- Normalizare data și ora ---
-  const dateRegex = /^\d{4}-\d{2}-\d{2}$/; // YYYY-MM-DD
-  const timeRegex = /^\d{2}:\d{2}$/;       // HH:MM
-
-  if (!dateRegex.test(data)) {
-    return res.status(400).json({ message: "Data nu este în formatul corect YYYY-MM-DD" });
-  }
-
-  if (!timeRegex.test(ora)) {
-    return res.status(400).json({ message: "Ora nu este în formatul corect HH:MM" });
-  }
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO programari 
-       (nume, prenume, specialitate, medic, data, ora, telefon, email, motiv, mesaj)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [nume, prenume, specialitate, medic, data, ora, telefon, email || null, motiv || null, mesaj || null]
-    );
-
-    console.log("Programare primită:", result.rows[0]);
-    res.status(200).json({ message: "Programare primită!", programare: result.rows[0] });
-  } catch (err) {
-    console.error("EROARE INSERT:", err);
-    res.status(500).json({ message: "Eroare la adăugarea programării." });
-  }
-});
-
-
-
-// --- GET pentru afișare programari ---
-app.get("/api/programari", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM programari ORDER BY id DESC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Eroare la preluarea programărilor." });
-  }
-});
-
-// --- Test server ---
+// --- Health Check Endpoint ---
 app.get("/", (req, res) => {
-  res.send("Serverul funcționează!");
+  res.json({ 
+    status: "OK", 
+    message: "Server funcționează!", 
+    timestamp: new Date(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
-// --- Pornire server ---
-app.listen(process.env.PORT || 3000, () => console.log("Server pornit"));
+// --- Healthcheck para Render ---
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK" });
+});
+
+// --- 404 Handler ---
+app.use((req, res) => {
+  res.status(404).json({ 
+    message: "Ruta nu există", 
+    path: req.path,
+    method: req.method 
+  });
+});
+
+// --- Error Handler ---
+app.use((err, req, res, next) => {
+  console.error('❌ Error:', err.message);
+  res.status(500).json({ 
+    message: "Eroare server",
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// --- Start Server ---
+const PORT = process.env.PORT || 3000;
+const server = app.listen(PORT, () => {
+  console.log(`
+╔════════════════════════════════════════╗
+║ 🏥 CLINIC MOBILA BACKEND              ║
+║────────────────────────────────────────║
+║ ✅ Server portat pe PORT ${PORT}          ${PORT > 9 ? '' : ' '}
+║ 🌍 Environment: ${process.env.NODE_ENV || 'development'}
+║ 📍 Backend URL: ${process.env.BACKEND_URL || `http://localhost:${PORT}`}
+║ 🎯 Frontend: ${process.env.FRONTEND_URL || 'http://localhost:3000'}
+║════════════════════════════════════════╝
+  `);
+});
+
+// Graceful shutdown (important pentru Render)
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM recibido. Cerrando gracefully...');
+  server.close(() => {
+    console.log('✅ Server inchis');
+    process.exit(0);
+  });
+});

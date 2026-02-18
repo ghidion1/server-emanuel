@@ -1,0 +1,38 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.iml
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Database
+*.sql.backup
+*.sqlite
+*.db
+
+# Temp
+tmp/
+temp/
+.tmp
+
+# Build
+dist/
+build/

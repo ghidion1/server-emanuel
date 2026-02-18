@@ -3,28 +3,57 @@ const sendEmail = require("../utils/sendEmail");
 
 const createProgramare = async (req, res) => {
   try {
-    const programare = await Programare.create(req.body);
+    const { nume, prenume, specialitate, medic, data, ora, telefon, email, motiv, mesaj } = req.body;
 
-    // Trimite email catre admin
-    await sendEmail({
-      to: process.env.ADMIN_EMAIL,
-      subject: "Noua programare",
-      text: `
-        Nume: ${programare.nume} ${programare.prenume}
-        Specialitate: ${programare.specialitate}
-        Medic: ${programare.medic}
-        Data: ${programare.data} la ora ${programare.ora}
-        Telefon: ${programare.telefon}
-        Email: ${programare.email}
-        Motiv: ${programare.motiv}
-        Mesaj: ${programare.mesaj}
-      `
+    // Crează programarea în baza de date
+    const programare = await Programare.create({
+      nume: nume.trim(),
+      prenume: prenume.trim(),
+      specialitate,
+      medic,
+      data,
+      ora,
+      telefon,
+      email: email?.trim() || null,
+      motiv: motiv?.trim() || null,
+      mesaj: mesaj?.trim() || null
     });
 
-    res.status(201).json({ success: true, programare });
+    // Trimite notificare email administratorului (non-blocking)
+    if (process.env.ADMIN_EMAIL) {
+      sendEmail({
+        to: process.env.ADMIN_EMAIL,
+        subject: `📅 Noua programare - ${specialitate}`,
+        text: `
+NOUA PROGRAMARE:
+
+Pacient: ${nume} ${prenume}
+Specialitate: ${specialitate}
+Medic: ${medic}
+Data: ${data}
+Ora: ${ora}
+Telefon: ${telefon}
+Email: ${email || '-'}
+Motiv: ${motiv || '-'}
+Mesaj: ${mesaj || '-'}
+
+---
+Verifica dashboard pentru mai multe detalii.
+        `
+      }).catch(err => console.error("Email admin eroare:", err.message));
+    }
+
+    return res.status(201).json({
+      message: "Programarea a fost trimisă cu succes! Vei fi contactat(ă) telefonic pentru confirmare.",
+      data: programare
+    });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Eroare server" });
+    console.error("❌ Eroare createProgramare:", err);
+    return res.status(500).json({
+      message: "Eroare la salvarea programării. Te rugăm să încerci din nou.",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 };
 
@@ -33,8 +62,10 @@ const getProgramari = async (req, res) => {
     const programari = await Programare.getAll();
     res.json(programari);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Eroare server" });
+    console.error("❌ Eroare getProgramari:", err);
+    res.status(500).json({
+      message: "Eroare la preluarea programărilor"
+    });
   }
 };
 
