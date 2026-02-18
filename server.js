@@ -16,7 +16,9 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'https://clinicmobila.netlify.app',
   'https://clinic-mobila.onrender.com',
+  'https://emanuel-cioburciu.md',
   process.env.FRONTEND_URL
 ].filter(Boolean); // Remove undefined values
 
@@ -44,7 +46,8 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    callback(new Error('CORS nicht allowed'));
+    console.warn(`❌ CORS blocked from: ${origin}`);
+    callback(new Error('CORS not allowed'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
