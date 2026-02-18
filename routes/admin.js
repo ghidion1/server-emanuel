@@ -6,13 +6,15 @@ const {
   updateProgramareStatus
 } = require('../controllers/adminController');
 
+
+const verifyAdmin = require('../middleware/auth');
 const router = express.Router();
 
 // POST: Admin login
 router.post('/login', loginAdmin);
 
-// GET: All appointments (admin dashboard)
-router.get('/programari', getAllProgramari);
+// GET: All appointments (admin dashboard) - SECURIZAT
+router.get('/programari', verifyAdmin, getAllProgramari);
 
 // DELETE: Delete appointment by ID
 router.delete('/programari/:id', deleteProgramare);
